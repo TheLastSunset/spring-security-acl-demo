@@ -32,26 +32,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors().disable()
-                .csrf().disable()
+                .cors(customize -> customize.disable())
+                .csrf(customize -> customize.disable())
                 .userDetailsService(userDetailsService())
-                .formLogin()
-                .successHandler((request, response, authentication) -> response.setStatus(HttpStatus.OK.value()))
-                .failureHandler(new AuthenticationEntryPointFailureHandler(new HttpStatusEntryPoint(HttpStatus.BAD_REQUEST)))
-                .and()
-                .logout()
-                .deleteCookies("JSESSIONID")
-                .invalidateHttpSession(true)
-                .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpStatus.OK.value()))
-                .and()
-                .exceptionHandling()
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                .and()
-                .authorizeHttpRequests()
-                .anyRequest().authenticated();
-//                .and()
-//                .addFilterBefore(new PermissionsFilter(permissionsService, new AntPathRequestMatcher("/api/events/**", HttpMethod.PATCH.name())),
-//                        AuthorizationFilter.class);
+                .formLogin(customize -> customize
+                        .successHandler((request, response, authentication) -> response.setStatus(HttpStatus.OK.value()))
+                        .failureHandler(new AuthenticationEntryPointFailureHandler(new HttpStatusEntryPoint(HttpStatus.BAD_REQUEST))))
+                .logout(customize -> customize
+                        .deleteCookies("JSESSIONID")
+                        .invalidateHttpSession(true)
+                        .logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpStatus.OK.value())))
+                .exceptionHandling(customize -> customize
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .authorizeHttpRequests(customize -> customize
+                        .anyRequest().authenticated());
+
+//        http.addFilterBefore(new PermissionsFilter(permissionsService, new AntPathRequestMatcher("/api/events/**", HttpMethod.PATCH.name())),
+//                AuthorizationFilter.class);
 
         return http.build();
     }
